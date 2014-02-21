@@ -1,5 +1,8 @@
+package analysis;
 import java.util.ArrayList;
 import java.util.Date;
+
+import data.CommentInfo;
 
 
 public class SocialMatrixCell {

@@ -1,7 +1,11 @@
+package analysis;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeMap;
+
+import data.CommentInfo;
+import data.IssueInfo;
 
 
 public class Node {

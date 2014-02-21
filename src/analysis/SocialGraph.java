@@ -1,9 +1,13 @@
+package analysis;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeMap;
+
+import data.AuthorsInfo;
+import data.IssueInfo;
 
 import edu.uci.ics.jung.graph.DirectedGraph;
 import edu.uci.ics.jung.graph.DirectedSparseGraph;
@@ -28,8 +32,8 @@ public class SocialGraph {
 		private String meanExpertise;
 
 	public void create(ArrayList<IssueInfo> issueInfos) {
-		Tagger tag = new Tagger();
-		tag.loadSWNDataFile();
+		//Tagger tag = new Tagger();
+		//tag.loadSWNDataFile();
 		
 	for (IssueInfo issueInfo : issueInfos) {
 		String issueName = (issueInfo.getLink().replaceFirst("node", "")).substring(2);
@@ -114,17 +118,17 @@ public class SocialGraph {
 				numWes += findNumWes(issueInfo.getComments().get(i).getPlainContent());
 				numPlusOnes += findNumPlusOnes(issueInfo.getComments().get(i).getPlainContent());
 				numThanks += findNumThanks(issueInfo.getComments().get(i).getPlainContent());
-				try {
+				//try {
 					System.out.println("issue: " + issueInfo.getLink() + " comment: " + i + " author: " + issueInfo.getComments().get(i).getAuthor());
-					tag.tagTheComment(issueInfo.getComments().get(i).getPlainContent());
-				} catch (IOException e) {
+					//tag.tagTheComment(issueInfo.getComments().get(i).getPlainContent());
+				/*} catch (IOException e) {
 					e.printStackTrace();
 				} catch (ClassNotFoundException e) {
 					e.printStackTrace();
-				}
-				numNegativeWords += tag.getNumNegativeWords();//findNumNegativeWords(issueInfo.getComments().get(i).getPlainContent());
-				numPositiveWords += tag.getNumPositiveWords();
-				numNeutralWords += tag.getNumNeutralWords();
+				}*/
+				//numNegativeWords += tag.getNumNegativeWords();//findNumNegativeWords(issueInfo.getComments().get(i).getPlainContent());
+				//numPositiveWords += tag.getNumPositiveWords();
+				//numNeutralWords += tag.getNumNeutralWords();
 				numSentences += findNumSentences(issueInfo.getComments().get(i).getPlainContent());
 				numCharacters += findNumCharacters(issueInfo.getComments().get(i).getPlainContent());
 				numNegativeExpressions += findNumNegativeExpressions(issueInfo.getComments().get(i).getPlainContent());

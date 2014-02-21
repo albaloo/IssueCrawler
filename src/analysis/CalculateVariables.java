@@ -1,3 +1,4 @@
+package analysis;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,28 +24,34 @@ import javax.swing.text.html.parser.ParserDelegator;
 
 import org.apache.commons.collections15.Transformer;
 
+import data.AuthorsInfo;
+import data.CommentInfo;
+import data.IssueInfo;
+import data.IssueParser;
+import data.IssueQueueParser;
+
 import edu.uci.ics.jung.algorithms.scoring.PageRank;
 
 public class CalculateVariables {
 
-	private ArrayList<IssueParseLister> innerListers = new ArrayList<IssueParseLister>();
+	private ArrayList<IssueParser> innerListers = new ArrayList<IssueParser>();
 	ArrayList<Double> durations = new ArrayList<Double>();
 	ArrayList<Date> startDates = new ArrayList<Date>();
 	ArrayList<IssueInfo> issueInfos = new ArrayList<IssueInfo>();
 	
 	SocialGraph socialGraph = new SocialGraph();
-	String suffix = "";//-performance";
+	String SUFFIX = "";//-performance";
 	
-	File fileConsensus=new File("consensus-allvariables" + suffix +".txt");
+	File fileConsensus=new File("consensus-allvariables" + SUFFIX +".txt");
     FileOutputStream fopConsensus;
 
-	File fileNonConsensus=new File("non-consensus-allvariables" + suffix +".txt");
+	File fileNonConsensus=new File("non-consensus-allvariables" + SUFFIX +".txt");
     FileOutputStream fopNonConsensus;
 
-    File fileAuthors=new File("authors" + suffix +".txt");
+    File fileAuthors=new File("authors" + SUFFIX +".txt");
     FileOutputStream fopAuthors;
         
-    File fileDurations=new File("consensus-durations" + suffix +".txt");
+    File fileDurations=new File("consensus-durations" + SUFFIX +".txt");
     FileOutputStream fopDurations;
     
 	DateFormat df = new SimpleDateFormat("MMM d yyy - h:mmaa");
@@ -52,12 +59,11 @@ public class CalculateVariables {
 	
 	public static void main(String [] args) {
 		CalculateVariables demo = new CalculateVariables();
-		demo.parsaAll();
+		demo.calculateVariables();
 	}
 	
-	public void parsaAll(){
+	public void calculateVariables(){
 		//URL of issues to parse
-		
 		//String spec = "http://drupal.org/project/issues/search/drupal?version[0]=7.x&issue_tags=Usability%2C%20d7ux";//args[0];
 		String spec= "http://drupal.org/project/issues/search/drupal?issue_tags=Usability";
 		//String spec = "http://drupal.org/project/issues/search/drupal?issue_tags=Performance";
@@ -68,7 +74,7 @@ public class CalculateVariables {
 			cutoffDate = df.parse("Feb 4 2009 - 4:17pm");
 			if(fileConsensus.exists() && fileNonConsensus.exists() && fileAuthors.exists()){
 				//Parse all the issues
-				parseAllIssues(spec);
+				loadAllIssues(spec);
 				//Sort the issue infos based on start time
 				Collections.sort(issueInfos, new IssueInfoTimeComparator());
 				//Go through the issues and print out their information
@@ -119,21 +125,21 @@ public class CalculateVariables {
 		}
 	}
 
-	private void parseAllIssues(String spec) {
-		while(spec != null && !spec.equals("")){
-			//Lister to parse the search page for the issues
-			IssueQueueParseLister lister = new IssueQueueParseLister();
-			parse(spec, lister);
-			//Parse inside of each issue
-			parseFoundLinks(lister.getFoundIssues());
-			//Go to the next page if any
-			if(lister.getNextPage() == null || lister.getNextPage().equals(""))
-				break;
-			spec = "http://drupal.org/" + lister.getNextPage();
-			System.out.println("spec: " + spec);
+	private void loadAllIssues(String spec) throws IOException {
+		//Lister to parse the search page for the issues
+		String issueListFileName = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\all-threads-" + SUFFIX +".txt";
+		String allIssuefilesPath = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\thread-";
+		IssueQueueParser parser = new IssueQueueParser();
+		issueInfos = parser.loadAndParseIssues(issueListFileName, allIssuefilesPath, SUFFIX);
+		
+		//Parse inside of each issue
+		for (IssueInfo issue : issueInfos) {
+			IssueParser issueParser = new IssueParser();
+			issueParser.parseIssue(issue, allIssuefilesPath, SUFFIX);
 		}
 	}
-
+					
+	
 	private void initFiles() throws FileNotFoundException {
 		fopConsensus = new FileOutputStream(fileConsensus);
 		fopNonConsensus = new FileOutputStream(fileNonConsensus);
@@ -180,7 +186,7 @@ public class CalculateVariables {
 	
 		
 	private void pageRank() throws IOException{
-		File filePageRank = new File("pageRank" + suffix +".txt");
+		File filePageRank = new File("pageRank" + SUFFIX +".txt");
 		FileOutputStream fopPageRank = new FileOutputStream(filePageRank);
 		
 		Transformer<Edge, Double> wtTransformer = new Transformer<Edge,Double>() {
@@ -205,10 +211,10 @@ public class CalculateVariables {
 	}
 	
 	public void printSocialMatrix() throws IOException{
-		File fileMatrix = new File("matrix" + suffix +".txt");
+		File fileMatrix = new File("matrix" + SUFFIX +".txt");
 		FileOutputStream fopMatrix = new FileOutputStream(fileMatrix);
 		
-		File fileAtts = new File("attributes" + suffix +".txt");
+		File fileAtts = new File("attributes" + SUFFIX +".txt");
 		FileOutputStream fopAtts = new FileOutputStream(fileAtts);
 		
 		String printAtr = "";
@@ -274,99 +280,8 @@ public class CalculateVariables {
 		return result;
 	}
 	
-	public void parseFoundLinks(ArrayList<IssueInfo> foundIssues){
-		for (IssueInfo issue : foundIssues) {
-			IssueParseLister lister = new IssueParseLister();
-			parse("http://drupal.org" + issue.getLink(), lister);
-			String prevPage = "";
-			while(lister.getNextPage() != null && !lister.getNextPage().equals("") && !lister.getNextPage().equals(prevPage)){
-				prevPage = lister.getNextPage();
-				parse("http://drupal.org" + lister.getNextPage(), lister);
-			}
-			innerListers.add(lister);
-			
-			//TODO: update issue info based on innerlister
-			for (CommentInfo commentInfo : lister.getCommentInfos()) {
-				if(isNotSubscription(commentInfo)){
-					issue.addComments(commentInfo);
-					if(isCommit(commentInfo))
-						issue.addCommits(commentInfo.getDate());
-				}
-			}
-			
-			if (!issue.getStatus().equals("closed (duplicate)"))
-				issueInfos.add(issue);
-		}
-					
-					
-	}
-	
-	private boolean isNotSubscription(CommentInfo commentInfo) {
-		String text = commentInfo.getPlainContent();
-		if (text == null)
-			return true;
-		String [] words = text.split("\\s+");
-		if(words.length < 12 && text.contains("subscrib"))
-			return false;
-		return true;
-	}
-
-	private boolean isCommit(CommentInfo commentInfo) {
-		String text = commentInfo.getPlainContent();
-		String author = commentInfo.getAuthor();
-		if (text == null)
-			return false;
-		if(text.contains("Committed to CVS HEAD"))
-			return true;
-		if((text.contains("Committed") || text.contains("committed")) && text.contains("HEAD") && (author.equals("Dries") || author.equals("webchick")))
-			return true;
-		return false;
-	}
-	
-	public void parse (String spec, HTMLEditorKit.ParserCallback lister){
-		Reader r;
-		try {
-           if (spec.indexOf("://") > 0) {
-           URL u = new URL(spec);
-           Object content = u.getContent();
-               if (content instanceof InputStream) {
-               r = new InputStreamReader((InputStream)content);
-           }
-               else if (content instanceof Reader) {
-               r = (Reader)content;
-           }
-               else {
-               throw new Exception("Bad URL content type.");
-           }
-          }
-           else {
-           r = new FileReader(spec);
-          }
-       
-       HTMLEditorKit.Parser parser;
-       parser = new ParserDelegator();
-       parser.parse(r, lister, true);
-       r.close();
-   }
-       catch (Exception e) {
-       System.err.println("Error: " + e);
-       e.printStackTrace(System.err);
-   }
-
-	}
 }
 
-class DateComparator implements Comparator<IssueParseLister>{
-	   public int compare(IssueParseLister a, IssueParseLister b) {
-		   if(a.getCommentInfos().get(0).getDate().getTime() > b.getCommentInfos().get(0).getDate().getTime())
-			   return 1;
-		   else if(a.getCommentInfos().get(0).getDate().getTime() == b.getCommentInfos().get(0).getDate().getTime())
-			   return 0;
-		   else
-			   return -1;
-	       // now determine which if x > y return 1  x == y return 0  x < y return -1
-	   }
-	}
 
 class IssueInfoPriorityComparator implements Comparator<IssueInfo>{
 	   public int compare(IssueInfo a, IssueInfo b) {
