@@ -24,9 +24,10 @@ public class IssueAnalysis {
 	private int numYouIs;
 	private int numPlusOnes;
 	private int numThanks;
-	private int numNegativeWords;
-	private int numPositiveWords;
-	private int numNeutralWords;
+	
+	private int percentageOfNegativeComments;
+	private int percentageOfPositiveComments;
+	
 	private double characterToSentenceRatio;
 	private double wordToSentenceRatio;
 	private int numSentences;
@@ -74,23 +75,17 @@ public class IssueAnalysis {
 	public void setNumNegativeExpressions(int numNegativeExpressions) {
 		this.numNegativeExpressions = numNegativeExpressions;
 	}
-	public int getNumNegativeWords() {
-		return numNegativeWords;
+	public int getPercentageOfNegativeComments() {
+		return percentageOfNegativeComments;
 	}
-	public void setNumNegativeWords(int numNegativeWords) {
-		this.numNegativeWords = numNegativeWords;
+	public void setPercentageOfNegativeComments(int percentage) {
+		this.percentageOfNegativeComments = percentage;
 	}
-	public int getNumPositiveWords() {
-		return numPositiveWords;
+	public int getPercentageOfPositiveComments() {
+		return percentageOfPositiveComments;
 	}
-	public void setNumPositiveWords(int numPositiveWords) {
-		this.numPositiveWords = numPositiveWords;
-	}
-	public int getNumNeutralWords() {
-		return numNeutralWords;
-	}
-	public void setNumNeutralWords(int numNeutralWords) {
-		this.numNeutralWords = numNeutralWords;
+	public void setPercentageOfPositiveComments(int percentage) {
+		this.percentageOfPositiveComments = percentage;
 	}
 	public double getCharacterToSentenceRatio() {
 		return characterToSentenceRatio;
@@ -213,16 +208,15 @@ public class IssueAnalysis {
 		getNumUsabilityTesting() + "\t" +
 		getNumSummaries() + "\t" +
 		getNumCodeReviews() + "\t" +
-		getNumScreenshots() + "\t" +
+		getNumImages() + "\t" +
 		getNumOutsideResources() + "\t" +
 		getNumContatiousWords() + "\t" +
 		getNumWes() + "\t" +
 		getNumYouIs() + "\t" +
 		getNumPlusOnes() + "\t" +
 		getNumThanks() + "\t" +
-		getNumNegativeWords() + "\t" +
-		getNumPositiveWords() + "\t" +
-		getNumNeutralWords() + "\t" +
+		getPercentageOfNegativeComments() + "\t" +
+		getPercentageOfPositiveComments() + "\t" +
 		getCharacterToSentenceRatio() + "\t" +
 		getWordToSentenceRatio() + "\t" +
 		getNumSentences() + "\t" +
@@ -280,10 +274,10 @@ public class IssueAnalysis {
 				result ++;
 		return result;
 	}
-	public int getNumScreenshots(){
+	public int getNumImages(){
 		int result = 0;
 		for (int i = 0; i < issueInfo.getComments().size(); i++) {
-			result += issueInfo.getComments().get(i).getNumScreenshots();
+			result += issueInfo.getComments().get(i).getNumImages();
 		}		
 		return result;
 	}

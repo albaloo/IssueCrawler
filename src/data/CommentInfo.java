@@ -16,9 +16,9 @@ public class CommentInfo {
 	private ArrayList<String> images = new ArrayList<String>();
 	private Date date;
 	private Boolean patchAttached = false;
-	private int screenshot = 0;
 	private int numOutsideResources = 0;
 	private int numRepliesRecieved = 0;
+	private ArrayList<String> receiverNames = new ArrayList<String>();
 
 	public int getNumRepliesRecieved() {
 		return numRepliesRecieved;
@@ -30,18 +30,6 @@ public class CommentInfo {
 
 	public void increaseNumRepliesRecieved() {
 		this.numRepliesRecieved++;
-	}
-
-	public int getNumScreenshots() {
-		return screenshot;
-	}
-
-	public void setScreenshot(int screenshot) {
-		this.screenshot = screenshot;
-	}
-
-	public void addScreenshot() {
-		this.screenshot++;
 	}
 
 	public String getTitle() {
@@ -150,5 +138,13 @@ public class CommentInfo {
 
 	public int getNumOutsideResources() {
 		return numOutsideResources;
+	}
+
+	public void setReceiverNames(ArrayList<String> receiverNames) {
+		this.receiverNames.addAll(receiverNames);
+	}
+	
+	public ArrayList<String> getReceiverNames(){
+		return receiverNames;
 	}
 }

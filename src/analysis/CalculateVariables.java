@@ -62,6 +62,10 @@ public class CalculateVariables {
 		demo.calculateVariables();
 	}
 	
+	public void calculateVaribalesForOneIssue(){
+		
+	}
+	
 	public void calculateVariables(){
 		//URL of issues to parse
 		//String spec = "http://drupal.org/project/issues/search/drupal?version[0]=7.x&issue_tags=Usability%2C%20d7ux";//args[0];
@@ -153,8 +157,8 @@ public class CalculateVariables {
 		boolean cutoff_n = false;
 	
 		for (IssueInfo issueInfo : issueInfos) {
-			String issueInfoPrint = issueInfo.printString(socialGraph);
-			String durationInfo = issueInfo.printDurations();
+			String issueInfoPrint = "";//TODO: issueInfo.printString(socialGraph);
+			String durationInfo = "";//TODO: issueInfo.printDurations();
 			if(!issueInfo.isConsensus()){
 					fopNonConsensus.write(issueInfoPrint.getBytes());
 					if(issueInfo.getComments().get(0).getDate().getTime() > cutoffDate.getTime() && !cutoff_n){

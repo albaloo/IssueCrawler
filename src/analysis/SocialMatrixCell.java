@@ -32,7 +32,7 @@ public class SocialMatrixCell {
 	public double calculateValue(){
 		value = 0;
 		for (int i = 0; i < comments.size(); i++) {
-			value += findNumWords(comments.get(i).getPlainContent());
+			value += findNumWords(comments.get(i).getContent());
 		}
 		return value;
 	}
@@ -75,7 +75,7 @@ public class SocialMatrixCell {
 	public int getNumConsensusThreads(Date date){
 		int result = 0;
 		for (int i = 0; i < comments.size(); i++) {
-			if(comments.get(i).isConsensus() && comments.get(i).getDate().getTime() < date.getTime())
+		//TODO:	if(comments.get(i).isConsensus() && comments.get(i).getDate().getTime() < date.getTime())
 				result ++;
 		}
 		return result;

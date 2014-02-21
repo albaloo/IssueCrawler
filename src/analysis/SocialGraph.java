@@ -1,10 +1,12 @@
 package analysis;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeMap;
+
+import org.apache.commons.lang3.StringUtils;
+
 
 import data.AuthorsInfo;
 import data.IssueInfo;
@@ -17,10 +19,10 @@ public class SocialGraph {
 
 	 public SocialMatrixCell[][] socialMatrix = new SocialMatrixCell[2800][2800];
 	 public TreeMap<String, Node> socialGraphNodes = new TreeMap<String, Node>();
-	 public String[] negativeWords = {"annoyed", "assaulted", "attacked", "avoided", "awful", "awkward", "bad", "beat", "beaten down", "betrayed", "bitter", "bizzare", "blamed", "bored", "boring", "bothered", "bothersome", "bullied", "burdened", "burdensome", "careless", "chaotic", "clueless", "conflicted", "confronted", "confused", "cowardly", "crabby", "cranky", "crap", "crazy", "creepy", "critical", "criticized", "damned", "despicable", "destroyed", "destructive", "disappointed", "disappointing", "disapproved of", "discardable", "discarded", "discouraged", "disgust", "disgusted", "dishonest", "dislike", "disliked", "displeased", "disregarded", "disrespected", "dissatisfied", "doomed", "double-crossed", "doubted", "doubtful", "down", "dreadful", "dumb", "dumped", "dumped on", "emasculated", "embarrassed", "exhausted", "freaked out", "frustrated", "harassed", "hate", "hateful", "helpless", "hesitant", "hideous", "hindered", "hopeless", "horrible", "horrified", "horror", "hostile", "hot-tempered", "humiliated", "hurt", "idiotic", "ignorant", "ignored", "insane", "insulted", "irritated", "jealous", "jerked around", "kept away", "kept out", "left out", "let down", "limited", "lost", "mad", "messed with", "messed up", "messy", "miserable", "misled", "mistaken", "mocked", "numb", "nuts", "obsessed", "obsessive", "offended", "pain", "pathetic", "pissed", "pissed off", "powerless", "pressured", "punished", "pushed", "pushed away", "retarded", "ridiculed", "ridiculous", "screwed", "screwed over", "screwed up", "selfish", "snapped at", "stuck", "stupid", "suffering", "suspicious", "shortsightedness"};
 	 public String[] designers = {"yoroy", "Roy", "Bojhan", "bojhan", "leisa", "leisareichelt", "cliff", "mark", "Mark"};
 	 public DirectedGraph<Node, Edge> socialGraph = new DirectedSparseGraph<Node, Edge>();
-		
+	 public ArrayList<IssueAnalysis> allIssueAnalysis = new ArrayList<IssueAnalysis>();
+	 
 	 ArrayList<AuthorsInfo> authorsInfos = new ArrayList<AuthorsInfo>();
 	 
 		private String usabilityInterest = "";
@@ -30,18 +32,50 @@ public class SocialGraph {
 		private String meanPageRank = "";
 		private String currCommentsOfCreator;
 		private String meanExpertise;
+		
+		/*
+		 * (1) Percentage of negative comments
+(2) Percentage of positive comments
+(7) Avg. # of words
+(10) # of words in issue brief
+(11) # of non-Drupal links
+(12) Characters-to-sentences-ratio
+(13) Words-to-sentences-ratio
+(20) Avg. duration b/t comments
+(23) # of triads in graph
+(24) Number of influential participants
+(25)Avg. # of total participation duration
+(26) Avg. # of participants’ prev. comment
+(27) # of participation weeks of creator
+(28) # of prev. comments of creator
+(29) # of alternate replies*/
+		
 
 	public void create(ArrayList<IssueInfo> issueInfos) {
 		//Tagger tag = new Tagger();
 		//tag.loadSWNDataFile();
 		
-	for (IssueInfo issueInfo : issueInfos) {
-		String issueName = (issueInfo.getLink().replaceFirst("node", "")).substring(2);
-		Node issueNode = new Node(Node.THREAD, issueName, issueInfo.getLink(), issueInfo.getNumComments(), issueInfo.isConsensus());
-		socialGraphNodes.put(issueName,issueNode);
-		socialGraph.addVertex(issueNode);
-		issueNode.setIndex();
+		for (IssueInfo issueInfo : issueInfos) {
+			String issueName = (issueInfo.getLink().replaceFirst("node", "")).substring(2);
+			Node issueNode = new Node(Node.THREAD, issueName, issueInfo.getLink(), issueInfo.getNumComments(), issueInfo.isConsensus());
+			socialGraphNodes.put(issueName,issueNode);
+			socialGraph.addVertex(issueNode);
+			issueNode.setIndex();
+		
+			IssueAnalysis issueAnalysis = createIssueAnalysis(issueInfo);
+			allIssueAnalysis.add(issueAnalysis);
+		}
+	}
 	
+	public void printAllIssueAnalysis(){
+		for (IssueAnalysis issueAnalysis : allIssueAnalysis) {
+			System.out.println(issueAnalysis.printString(this));
+		}
+	}
+	
+	private IssueAnalysis createIssueAnalysis(IssueInfo issueInfo){
+		IssueAnalysis currentIssueAnalysis = new IssueAnalysis(issueInfo);
+		
 		ArrayList<Node> tempAuthorNodes = new ArrayList<Node>();
 		ArrayList<Double> durations = new ArrayList<Double>();
 		
@@ -51,44 +85,50 @@ public class SocialGraph {
 		Date currCommentTime = null;
 		if(issueInfo.getComments().size() > 0)
 			prevCommentTime = issueInfo.getComments().get(0).getDate();
+		
+		int sumNumWords = 0;	
 		int IRCQuotations = 0;
-		int sumNumWords = 0;
 		int numQuestionMarks = 0;
 		int numUsabilityTesting = 0;
 		int numSummaries = 0;
 		int numCodeReviews = 0;
 		int numContatiousWords = 0;
+		
 		int numWes = 0;
 		int numYouIs = 0;
 		int numPlusOnes = 0;
 		int numThanks = 0;
-		int numNegativeWords = 0;
+
 		int numNegativeExpressions = 0;
+		
 		int numPositiveWords = 0;
-		int numNeutralWords = 0;
-		double characterToSentenceRatio = 0;
-		double wordToSentenceRatio = 0;
+		int numStopWords = 0;
+		int numNegativeWords = 0;
+		
+		int numNegativeComments = 0;
+		int numPositiveComments = 0;
+		
 		int numSentences = 0;
 		int numCharacters = 0;
 		
 		
-		ArrayList<Integer> receivers = new ArrayList<Integer>();
+		//ArrayList<Integer> receivers = new ArrayList<Integer>();
 		ArrayList<String> thankedFor = new ArrayList<String>();
 		
 		for(int i = 0; i < issueInfo.getComments().size(); i++){
 			if(issueInfo.getComments().get(i).getAuthor() == null){
-				System.out.println("salam");
+				System.out.println("Author is null");
 			}else{
 				Node currentAuthorsNode = null;
+				
+				//duration
 				currCommentTime = issueInfo.getComments().get(i).getDate();
 				Double duration = new Double(Stats.findDuration(prevCommentTime, currCommentTime));
 				if(duration > 0)
 					durations.add(duration);
 				else if (durations.size() > 0)
 					durations.set(durations.size()-1, duration + durations.get(durations.size()-1));
-				sumNumWords += calculateNumWords(issueInfo.getComments().get(i).getPlainContent());
-				if(IRCQuotation(issueInfo.getComments().get(i).getPlainContent()))
-					IRCQuotations ++;
+				
 				//look for the node
 				for (int j = 0; j < tempAuthorNodes.size(); j++) {
 					if(tempAuthorNodes.get(j).getName().equals(issueInfo.getComments().get(i).getAuthor())){
@@ -96,6 +136,7 @@ public class SocialGraph {
 						break;
 					}
 				}
+				
 				if(currentAuthorsNode == null || currentAuthorsNode.equals(null)){
 					currentAuthorsNode = new Node(Node.AUTHOR, issueInfo.getComments().get(i).getAuthor(), issueInfo.getComments().get(i).getAuthorLink(), 1, false);
 					tempAuthorNodes.add(currentAuthorsNode);
@@ -103,75 +144,97 @@ public class SocialGraph {
 					currentAuthorsNode.addNumComments(1);
 				}
 				
-				ArrayList<String> tempReceivers = currentAuthorsNode.updateRepliersAndThreads(issueInfo, issueInfo.getComments().get(i),Stats.findDuration(prevCommentTime, currCommentTime));
-				numReplyTo += tempReceivers.size();
-				//find number of ideas
-				receivers.addAll(findUniqueReceivers(tempReceivers, receivers));
+				currentAuthorsNode.updateRepliersAndThreads(issueInfo, issueInfo.getComments().get(i),Stats.findDuration(prevCommentTime, currCommentTime));
+				numReplyTo += issueInfo.getComments().get(i).getReceiverNames().size();
+				//receivers.addAll(findUniqueReceivers(issueInfo.getComments().get(i).getReceiverNames(), receivers));
+
 				prevCommentTime = currCommentTime;
-				if(issueInfo.getComments().get(i).getPlainContent()!= null){
-				numQuestionMarks += findNumQuestionMarks(issueInfo.getComments().get(i).getPlainContent());
-				numUsabilityTesting += findNumUsabilityTestings(issueInfo.getComments().get(i).getPlainContent());
-				numSummaries += findNumSummaries(issueInfo.getComments().get(i).getPlainContent());
-				numCodeReviews += findNumCodeReviews(issueInfo.getComments().get(i).getPlainContent());
-				numContatiousWords += findNumContatiousWords(issueInfo.getComments().get(i).getPlainContent());
-				numYouIs += findNumYouIs(issueInfo.getComments().get(i).getPlainContent());
-				numWes += findNumWes(issueInfo.getComments().get(i).getPlainContent());
-				numPlusOnes += findNumPlusOnes(issueInfo.getComments().get(i).getPlainContent());
-				numThanks += findNumThanks(issueInfo.getComments().get(i).getPlainContent());
-				//try {
-					System.out.println("issue: " + issueInfo.getLink() + " comment: " + i + " author: " + issueInfo.getComments().get(i).getAuthor());
-					//tag.tagTheComment(issueInfo.getComments().get(i).getPlainContent());
-				/*} catch (IOException e) {
-					e.printStackTrace();
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
-				}*/
-				//numNegativeWords += tag.getNumNegativeWords();//findNumNegativeWords(issueInfo.getComments().get(i).getPlainContent());
-				//numPositiveWords += tag.getNumPositiveWords();
-				//numNeutralWords += tag.getNumNeutralWords();
-				numSentences += findNumSentences(issueInfo.getComments().get(i).getPlainContent());
-				numCharacters += findNumCharacters(issueInfo.getComments().get(i).getPlainContent());
-				numNegativeExpressions += findNumNegativeExpressions(issueInfo.getComments().get(i).getPlainContent());
-				thankedFor.addAll(findPeopleThankedFor(issueInfo.getComments().get(i).getPlainContent(), tempAuthorNodes));
+				
+				String currentContent = issueInfo.getComments().get(i).getContent();
+				if (currentContent != null) {
+					sumNumWords += ContentAnalysis.calculateNumWords(currentContent);
+					
+					//IRC
+					if(ContentAnalysis.mentionsIRC(currentContent))
+						IRCQuotations ++;
+
+					numQuestionMarks += ContentAnalysis
+							.findNumQuestionMarks(currentContent);
+					numUsabilityTesting += ContentAnalysis
+							.findNumCommentsMentionedUsabilityTestings(currentContent);
+					numSummaries += ContentAnalysis
+							.findNumCommentsMentionedSummaries(currentContent);
+					numCodeReviews += ContentAnalysis
+							.findNumCommentsMentionedCodeReviews(currentContent);
+					numContatiousWords += ContentAnalysis
+							.findNumContatiousWords(currentContent);
+					numYouIs += ContentAnalysis.findNumYouIs(currentContent);
+					numWes += ContentAnalysis.findNumWes(currentContent);
+					numPlusOnes += ContentAnalysis
+							.findNumPlusOnes(currentContent);
+					numThanks += ContentAnalysis.findNumThanks(currentContent);
+					numSentences += ContentAnalysis
+							.findNumSentences(currentContent);
+					numCharacters += ContentAnalysis
+							.findNumCharacters(currentContent);
+					numNegativeExpressions += ContentAnalysis
+							.findNumNegativeExpressions(currentContent);
+					
+					numNegativeWords = ContentAnalysis
+							.findNumNegativeWords(currentContent);
+					numPositiveWords = ContentAnalysis
+							.findNumPositiveWords(currentContent);
+					numStopWords = ContentAnalysis
+							.findNumStopWords(currentContent);
+					
+					double positiveRatio = numPositiveWords/(sumNumWords - numStopWords);
+					double negativeRatio = numNegativeWords/(sumNumWords - numStopWords);
+					
+					if(positiveRatio > negativeRatio)
+						numPositiveComments++;
+					else
+						numNegativeComments++;
+					// try {
+					// tag.tagTheComment(issueInfo.getComments().get(i).getPlainContent());
+					/*
+					 * } catch (IOException e) { e.printStackTrace(); } catch
+					 * (ClassNotFoundException e) { e.printStackTrace(); }
+					 */
+					// numNegativeWords +=
+					// tag.getNumNegativeWords();//findNumNegativeWords(issueInfo.getComments().get(i).getPlainContent());
+					// numPositiveWords += tag.getNumPositiveWords();
+					// numNeutralWords += tag.getNumNeutralWords();
+					// thankedFor.addAll(ContentAnalysis.findPeopleThankedFor(issueInfo.getComments().get(i).getContent(),
+					// tempAuthorNodes));
 				}
 			}
 		}
 		
 		addNodesToSocialGraph(tempAuthorNodes);
 		double replyToRatio = (double)numReplyTo;// / issueInfo.getComments().size();
-		issueInfo.setReplyToRatio(replyToRatio);
-		issueInfo.setDurations(durations);
-		issueInfo.setIRCQuatation(IRCQuotations);
-		issueInfo.setTotalNumWords(sumNumWords);
-		issueInfo.setNumQuestionMarks(numQuestionMarks);
-		issueInfo.setNumUsabilityTesting(numUsabilityTesting);
-		issueInfo.setNumSummaries(numSummaries);
-		issueInfo.setNumCodeReviews(numCodeReviews);
-		issueInfo.setNumContatiousWords(numContatiousWords);
-		issueInfo.setNumWes(numWes);
-		issueInfo.setNumYouIs(numYouIs);
-		issueInfo.setNumPlusOnes(numPlusOnes);
-		issueInfo.setNumThanks(numThanks);
-		issueInfo.setNumNegativeWords(numNegativeWords);
-		issueInfo.setNumPositiveWords(numPositiveWords);
-		issueInfo.setNumNeutralWords(numNeutralWords);
-		issueInfo.setCharacterToSentenceRatio((double)numCharacters/numSentences);
-		issueInfo.setWordToSentenceRatio((double)sumNumWords/numSentences);
-		issueInfo.setNumSentences(numSentences);
-		issueInfo.setNumNegativeExpressions(numNegativeExpressions);
-		issueInfo.setUniqueAuthorNames(findAuthorsList(tempAuthorNodes));
-		issueInfo.setPeopleThankedFor(thankedFor);
-	}
-}
-	
-	 private int findNumCharacters(String plainContent) {
-		plainContent.length();
-		return 0;
-	}
-
-	private int findNumSentences(String plainContent) {
-		String[] sentences = plainContent.split("[\\.\\,\\?\\!]");
-		return sentences.length;
+		currentIssueAnalysis.setReplyToRatio(replyToRatio);
+		currentIssueAnalysis.setDurations(durations);
+		currentIssueAnalysis.setIRCQuatation(IRCQuotations);
+		currentIssueAnalysis.setTotalNumWords(sumNumWords);
+		currentIssueAnalysis.setNumQuestionMarks(numQuestionMarks);
+		currentIssueAnalysis.setNumUsabilityTesting(numUsabilityTesting);
+		currentIssueAnalysis.setNumSummaries(numSummaries);
+		currentIssueAnalysis.setNumCodeReviews(numCodeReviews);
+		currentIssueAnalysis.setNumContatiousWords(numContatiousWords);
+		currentIssueAnalysis.setNumWes(numWes);
+		currentIssueAnalysis.setNumYouIs(numYouIs);
+		currentIssueAnalysis.setNumPlusOnes(numPlusOnes);
+		currentIssueAnalysis.setNumThanks(numThanks);
+		currentIssueAnalysis.setPercentageOfNegativeComments(numNegativeComments/issueInfo.getComments().size());
+		currentIssueAnalysis.setPercentageOfPositiveComments(numPositiveComments/issueInfo.getComments().size());
+		currentIssueAnalysis.setCharacterToSentenceRatio((double)numCharacters/numSentences);
+		currentIssueAnalysis.setWordToSentenceRatio((double)sumNumWords/numSentences);
+		currentIssueAnalysis.setNumSentences(numSentences);
+		currentIssueAnalysis.setNumNegativeExpressions(numNegativeExpressions);
+		currentIssueAnalysis.setUniqueAuthorNames(findAuthorsList(tempAuthorNodes));
+		currentIssueAnalysis.setPeopleThankedFor(thankedFor);
+		
+		return currentIssueAnalysis;
 	}
 
 	private ArrayList<String> findAuthorsList(ArrayList<Node> tempAuthorNodes) {
@@ -180,186 +243,8 @@ public class SocialGraph {
 			authors.add(node.getName());
 		} 
 		return authors;
-	}
-
-	private int findNumPlusOnes(String content){
-			if(content != null && !content.equals(""))
-				if(content.contains("+1 ") || content.contains("+1.") || content.contains("+1ing") || content.contains("+1-ed"))
-					return 1;
-				
-			return 0;
-		}
-		
-	 private int findNumThanks(String content){
-			if(content != null && !content.equals(""))
-				if(content.contains("Thanks") || content.contains("thanks") || content.contains("Thank you") || content.contains("thank you"))
-					return 1;
-				
-			return 0;
-		}
+	}	 
 	
-	 private ArrayList<String> findPeopleThankedFor(String content, ArrayList<Node> tempAuthors){
-		 ArrayList<String> thankedFor = new ArrayList<String>();
-		 
-		 if(content != null && !content.equals("")){
-			 String[] sentences = content.split("[\\.\\!\\?]");
-			 
-			 for (String sentence : sentences) {
-				 sentence = sentence.trim();
-				 sentence = sentence.toLowerCase();
-				 if(sentence.contains("thanks") || sentence.contains("thank you") || sentence.contains("thx")|| sentence.contains("great work")|| sentence.contains("great job") || sentence.contains("that's great") || sentence.contains("good job")){
-					 boolean found = false;
-					 for (Node node : tempAuthors) {
-							String[] names = (node.getName().toLowerCase()).split("[\\_\\-\\ ]");
-							String[] words = sentence.split("[\\,\\ \\:\\@]");
-							//if(sentence.contains(node.getName()) || sentence.contains(names[0])){
-							for(int i = 0; i < words.length; i++){
-								if(words[i].equals(names[0]) || words[i].equals(node.getName().toLowerCase())){
-									thankedFor.add(node.getName());
-									found = true;
-								}
-							}
-						}
-					 if(!found){
-						 thankedFor.add(sentence);
-					 }
-					 /*if (sentence.contains("thanks to a")){
-						 int byIndex = sentence.indexOf("by");
-						 if (byIndex >=0 ){
-							 String[] words = (sentence.substring(byIndex+3)).split("[\\,\\ ]");
-							 if(words.length>0)
-								 thankedFor.add(words[0]);
-						 }
-					 }else if (sentence.contains("thanks to")){
-						 int index = sentence.indexOf("thanks to");
-						 if (index >= 0){
-							 String[] words = (sentence.substring(index+10)).split("[\\,\\ ]");
-							 if(words.length>0)
-								 thankedFor.add(words[0]);
-						 }
-					 }else if (sentence.contains("@")){
-						 int index = sentence.indexOf("@");
-						 if (index >= 0){
-							 String[] words = (sentence.substring(index+1)).split("[\\,\\ ]");
-							 if(words.length>0)
-								 thankedFor.add(words[0]);
-						 }
-					 }else{
-						for (Node node : tempAuthors) {
-							String[] words = (node.getName()).split("[\\_\\-\\ ]");
-							if(sentence.contains(node.getName()) || sentence.contains(words[0])){
-								thankedFor.add(node.getName());
-							}
-						}
-					 }*/
-				 }
-			 }
-		 }
-	
-		 return thankedFor;
-	}
-	 
-	 
-	private int findNumNegativeWords(String content){
-		 int numNegativeWords = 0;
-		 if(content != null && !content.equals("")){
-			 String[] sentences = content.split("[\\.\\!\\?]");
-			 for (String sentence : sentences) {
-				 sentence = sentence.trim();
-				 sentence = sentence.toLowerCase();
-				 for (int i = 0; i < negativeWords.length; i++)
-					 if (sentence.contains(negativeWords[i].toLowerCase()) && !(sentence.contains("doesn't") || sentence.contains("doesn't") || sentence.contains("does not")|| sentence.contains("do not") || sentence.contains("don't")|| sentence.contains("is not") || sentence.contains("isn't") || sentence.contains("are't") || sentence.contains("are not") || sentence.contains("not") || sentence.contains("i")))
-						 numNegativeWords++;
-			 }
-		 }
-	
-		 return numNegativeWords;
-	}
-	
-	private int findNumNegativeExpressions(String content){
-		 int numNegativeExpressions = 0;
-		 if(content != null && !content.equals("")){
-			 String[] sentences = content.split("[\\.\\!\\?]");
-			 for (String sentence : sentences) {
-				 sentence = sentence.trim();
-				 sentence = sentence.toLowerCase();
-				 if ((sentence.contains("i don't know") || sentence.contains("i don't think") || sentence.contains("i don't agree")|| sentence.contains("i'm not aware") || sentence.contains("i don't believe")|| sentence.contains("i don't want") || sentence.contains("i do not know") || sentence.contains("i do not think") || sentence.contains("i do not believe") || sentence.contains("i am not aware")))
-						 numNegativeExpressions++;
-			 }
-		 }
-	
-		 return numNegativeExpressions;
-	}
-	
-	private int findNumContatiousWords(String content) {
-		int result = 0;
-		if(content != null && !content.equals("")){
-			if(content.contains("IMHO"))
-				result ++;
-			if(content.contains("IMO"))
-				result++;
-			content = content.toLowerCase();
-			if(content.contains("instead"))
-				result ++;
-			if(content.contains("maybe"))
-				result++;
-			if(content.contains("rather"))
-				result++;
-			if(content.contains("opinion"))
-				result++;
-			if(content.contains("idea"))
-				result++;
-		}
-		return result;
-	}
-
-	private int findNumWes(String content) {
-		int result = 0;
-		if(content != null && !content.equals("")){
-		content = content.toLowerCase();
-		String[] sentences = content.split("[\\.\\!\\?]");
-			for (String sentence : sentences) {
-				sentence = sentence.trim();
-				String[] words = sentence.split("[\\,\\ \\:\\@]");
-				for (String word : words) {
-					if(word.equals("we"))
-						result ++;
-				}
-			}		
-		}
-		return result;
-	}
-
-	private int findNumYouIs(String content) {
-		int result = 0;
-		if(content != null && !content.equals("")){
-			if(content.contains("IMHO"))
-				result ++;
-			if(content.contains("IMO"))
-				result++;
-			content = content.toLowerCase();
-			String[] sentences = content.split("[\\.\\!\\?]");
-			for (String sentence : sentences) {
-				sentence = sentence.trim();
-				String[] words = sentence.split("[\\,\\ \\:\\@]");
-				for (String word : words) {
-					if(word.equals("you")||word.equals("i"))
-						result ++;
-				}
-			}		
-		}
-		return result;
-	}
-
-	private ArrayList<Integer> findUniqueReceivers(ArrayList<String> temp, ArrayList<Integer> receivers){
-		ArrayList<Integer> result = new ArrayList<Integer>();
-		for (String value : temp) {
-			Integer num = new Integer(Node.isCommentNumber(value));
-			if(num != -1 && !receivers.contains(num))
-					result.add(num);
-		}
-		return result;
-	}
 	public static double Median(ArrayList<Double> values)
 	{
 		//TODO: sort is required
@@ -508,47 +393,7 @@ public class SocialGraph {
 			return result;
 		}
 
-	 private int findNumQuestionMarks(String content){
-			int result = 0;
-			if(content != null && !content.equals(""))
-			for(int i =0; i < content.length(); i++)
-				if(content.charAt(i) == '?')
-					result++;
-			return result;
-		}
-	 private int findNumUsabilityTestings(String content){
-			if(content != null && !content.equals(""))
-				if(content.contains("Usability Testing") || content.contains("usability testing") || content.contains("User Testing") || content.contains("user testing"))
-					return 1;
-				
-			return 0;
-		}
-	 private int findNumSummaries(String content){
-			if(content != null && !content.equals(""))
-				if(content.contains("Summary") || content.contains("summary") || content.contains("summarize"))
-					return 1;
-				
-			return 0;
-		}
-	 private int findNumCodeReviews(String content){
-			if(content != null && !content.equals(""))
-				if(content.contains("Code Review") || content.contains("code review") || content.contains("review") || content.contains("reviewed"))
-					return 1;
-				
-			return 0;
-		}
-		private int calculateNumWords(String content){
-			if(content != null){
-				String[] arr = content.split(" ");
-				return arr.length;
-			}else
-				return 0;
-		}
-		private boolean IRCQuotation(String content) {
-			if (content != null && (content.toLowerCase().contains(" irc ")|| content.toLowerCase().contains(" irc,") || content.toLowerCase().contains(" irc.") || content.toLowerCase().contains(" irc)")))
-				return true;
-			return false;
-		}
+	 
 
 		public String findAuthorsInfo(IssueInfo issueInfo) {
 			usabilityInterest = "";

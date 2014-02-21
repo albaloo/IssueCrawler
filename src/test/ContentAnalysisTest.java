@@ -98,7 +98,7 @@ public class ContentAnalysisTest {
 
 	@Test
 	public void testCalculateNumWords() {
-		assertEquals(5, ContentAnalysis.calculateNumWords("review your code, code review..."));	
+		assertEquals(10, ContentAnalysis.calculateNumWords("@EclipseGC region. Well, currently,   (compounded!) are on the left side:"));	
 	}
 
 	@Test

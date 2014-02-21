@@ -218,11 +218,6 @@ public class ContentAnalysis {
 
 	public static int findNumQuestionMarks(String content) {
 		return StringUtils.countMatches(content, "?");
-		/*
-		 * int result = 0; if(content != null && !content.equals("")) for(int i
-		 * =0; i < content.length(); i++) if(content.charAt(i) == '?') result++;
-		 * return result;
-		 */
 	}
 
 	public static int findNumCommentsMentionedUsabilityTestings(String content) {
@@ -258,11 +253,17 @@ public class ContentAnalysis {
 	}
 
 	public static int calculateNumWords(String content) {
+		int result = 0;
 		if (content != null) {
 			String[] arr = content.split(" ");
-			return arr.length;
-		} else
-			return 0;
+			for (String str : arr) {
+				if(!str.equals("") && !str.equals(" ") && !str.equals("\t") && !str.equals("\n") && !str.equals(".") && !str.equals(",") && !str.equals("!") && !str.equals("?")){
+					result++;
+					System.out.println("string: " + str);
+				}
+			}
+		} 
+		return result;
 	}
 
 	public static boolean mentionsIRC(String content) {

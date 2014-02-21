@@ -81,11 +81,15 @@ public class IssueParser{
 			currentComment.setImages(findImages(contentBlock));
 			
 			ArrayList<ReplyToLink> receivers = findReplyReceivers(content.text(), currentIssue.getLink(), currentComment.getDate()); 
-			//if(currentComment.getNumber() < 50.0)
-			//System.out.println(currentComment.getNumber() + ", " + currentComment.getContent());
+			
+			ArrayList<String> receiverNames = null;
 			if(!receivers.isEmpty())
-				updateReceivers(receivers, currentComment.getCommentNumber());
-
+				receiverNames = findAndupdateReceivers(receivers, currentComment.getCommentNumber());
+			
+			//Set receiver names
+			if(receiverNames != null)
+				currentComment.setReceiverNames(receiverNames);
+			
 			currentComments.add(currentComment);
 		}
 	}
@@ -111,7 +115,9 @@ public class IssueParser{
 		return -1;
 	}
 
-	private void updateReceivers(ArrayList<ReplyToLink> receivers, double currentCommentNumber){
+	//find receivers, updates them, and returns a list of their names.
+	private ArrayList<String> findAndupdateReceivers(ArrayList<ReplyToLink> receivers, double currentCommentNumber){
+		ArrayList<String> receiverNames = new ArrayList<String>();
 		ArrayList<Integer> commentNumberIndexes = new ArrayList<Integer>();
 		for (ReplyToLink ppLink : receivers) {
 			if(ppLink.type.equals("Number")){
@@ -133,9 +139,14 @@ public class IssueParser{
 			set.add(commentNumberIndexes.get(i));
 			
 		for (Integer i : set) {
-		  if(i != -1)
+		  if(i != -1){
 			  currentComments.get(i).increaseNumRepliesRecieved();
+			  if(currentComments.get(i).getAuthor() != null && !currentComments.get(i).getAuthor().equals(""))
+				  receiverNames.add(currentComments.get(i).getAuthor());
+		  }
 		}
+		
+		return receiverNames;
 	}
 	
 	private boolean hasPatch(Element block){
