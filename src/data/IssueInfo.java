@@ -1,17 +1,38 @@
+package data;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import analysis.SocialGraph;
+import analysis.Stats;
+
 
 public class IssueInfo {
-
+	
+	//TODO: numfollowers
+	
+	/*Issue Info Data*/
+	private int numPages = 1;
+	private String content;
 	private String link;
 	private String status;
 	private String category;
 	private String priority;
 	private String version;
+	private Date date;
+	private String title;
+	private String project;
+	private String component;
+	private String assigned;
+	private ArrayList<String> tags = new ArrayList<String>();
 	private int numComments;
 	private ArrayList<Date> commits = new ArrayList<Date>();
 	private ArrayList<CommentInfo> comments = new ArrayList<CommentInfo>();
+	
+	/*Issue Info Analysis*/
 	private double replyToRatio;
 	private int IRCQuatation;
 	private int totalNumWords;
@@ -35,6 +56,72 @@ public class IssueInfo {
 	private ArrayList<String> uniqueAuthorNames;
 	private ArrayList<String> peopleThankedFor;
 	
+	public IssueInfo(String link, int numPages) {
+		super();
+		this.link = link;
+		this.numPages= numPages; 
+	}	
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public Date getDate() {
+		return date;
+	}
+	public void setDate(String dateStr) {			
+		this.date = convertToDate(dateStr);
+	}	
+	private Date convertToDate(String dateStr){
+		Date date = new Date();
+		
+		dateStr = dateStr.replace(" at ", " ");
+		DateFormat df = new SimpleDateFormat("MMMMMMMM d, yyyy h:mmaa");
+		
+		try{
+			date = df.parse(dateStr);
+		}catch(ParseException e){
+			e.printStackTrace();
+		}
+		return date;
+	}
+	public String getProject() {
+		return project;
+	}
+	public void setProject(String project) {
+		this.project = project;
+	}
+	public String getComponent() {
+		return component;
+	}
+	public void setComponent(String component) {
+		this.component = component;
+	}
+	public int getNumPages() {
+		return numPages;
+	}
+	public String getContent() {
+		return content;
+	}
+	public void setContent(String content) {
+		this.content = content;
+	}
+	public String getAssigned() {
+		return assigned;
+	}
+	public void setAssigned(String assigned) {
+		this.assigned = assigned;
+	}
+	public ArrayList<String> getTags() {
+		return tags;
+	}
+	public void setTags(ArrayList<String> tags) {
+		this.tags = tags;
+	}
+	public void addTags(String tag) {
+		this.tags.add(tag);
+	}
 	public ArrayList<String> getPeopleThankedFor() {
 		return peopleThankedFor;
 	}
@@ -114,7 +201,6 @@ public class IssueInfo {
 		return comments;
 	}
 	public void addComments(CommentInfo comment){
-		comment.setConsensus(isConsensus());
 		comments.add(comment);
 	}
 	public void setComments(ArrayList<CommentInfo> comments){

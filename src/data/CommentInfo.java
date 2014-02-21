@@ -1,12 +1,14 @@
+package data;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class CommentInfo {
+public class CommentInfo {	
+	
 		private String title;
-		private int commentNumber;
+		private double commentNumber;
 		private String author;
 		private String authorLink;
 		private String content;
@@ -14,16 +16,18 @@ public class CommentInfo {
 		private ArrayList<String> images = new ArrayList<String>();
 		private Date date;
 		private Boolean patchAttached = false;
-		private Boolean isConsensus = false;
 		private int screenshot = 0;
-		private int numFollowers = 0;
 		private int numOutsideResources = 0;
+		private int numRepliesRecieved = 0;
 		
-		public Boolean isConsensus() {
-			return isConsensus;
+		public int getNumRepliesRecieved() {
+			return numRepliesRecieved;
 		}
-		public void setConsensus(Boolean isConsensus) {
-			this.isConsensus = isConsensus;
+		public void setNumRepliesRecieved(int numRepliesRecieved) {
+			this.numRepliesRecieved = numRepliesRecieved;
+		}
+		public void increaseNumRepliesRecieved() {
+			this.numRepliesRecieved++;
 		}
 		public int getNumScreenshots() {
 			return screenshot;
@@ -40,12 +44,18 @@ public class CommentInfo {
 		public void setTitle(String title) {
 			this.title = title;
 		}
-		public int getCommentNumber(){
+		public double getCommentNumber(){
 			return commentNumber;
 		}
 		public void setCommentNumber(String commentNumber){
-			commentNumber = commentNumber.substring(1);
-			this.commentNumber = Integer.parseInt(commentNumber);
+			this.commentNumber = toNumber(commentNumber);
+		}
+	    private double toNumber(String num) {
+			num = num.substring(1);
+			if (num == null || num.equals(""))
+				return 0.0;
+			else
+				return Double.parseDouble(num);
 		}
 		public String getAuthor() {
 			return author;
@@ -68,6 +78,9 @@ public class CommentInfo {
 		public void addImage(String img){
 			if(!images.contains(img))
 				images.add(img);
+		}
+		public void setImages(ArrayList<String> images){
+			this.images = images;
 		}
 		public int getNumImages(){
 			return images.size();
@@ -96,15 +109,6 @@ public class CommentInfo {
 		}
 		public Boolean getPatchAttached(){
 			return patchAttached;
-		}
-		public int getNumFollowers(){
-			return numFollowers;
-		}
-		public void setNumFollowers(String numFollowers){
-			if(numFollowers!=null && !numFollowers.equals("")){
-				String[] words = numFollowers.split(" ");
-				this.numFollowers = Integer.parseInt(words[0]);
-			}
 		}
 		private Date convertToDate(String dateStr){
 			Date date = new Date();

@@ -1,3 +1,5 @@
+package data;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +15,9 @@ import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.parser.ParserDelegator;
+
+import analysis.ProfileParseLister;
+
 
 
 public class AuthorsInfo {
