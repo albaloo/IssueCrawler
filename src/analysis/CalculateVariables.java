@@ -131,8 +131,8 @@ public class CalculateVariables {
 
 	private void loadAllIssues(String spec) throws IOException {
 		//Lister to parse the search page for the issues
-		String issueListFileName = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\all-threads-" + SUFFIX +".txt";
-		String allIssuefilesPath = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\thread-";
+		String issueListFileName = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\usabilityThreads\\all-threads-" + SUFFIX +".txt";
+		String allIssuefilesPath = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\usabilityThreads\\thread-";
 		IssueQueueParser parser = new IssueQueueParser();
 		issueInfos = parser.loadAndParseIssues(issueListFileName, allIssuefilesPath, SUFFIX);
 		

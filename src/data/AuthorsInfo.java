@@ -16,7 +16,6 @@ import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.HTML.Tag;
 import javax.swing.text.html.parser.ParserDelegator;
 
-import analysis.ProfileParseLister;
 
 
 
@@ -139,18 +138,18 @@ public class AuthorsInfo {
    }
 
 	public void parseProfile() {
-		ProfileParseLister lister = new ProfileParseLister();
+		ProfileParser parser = new ProfileParser();
 		try{
-			parse(getAuthorLink(), lister);
+			parser.parse(getAuthorLink());
 		}catch(IOException e){
 			System.out.println("secure link/access denied");
 		}
-		interests = lister.getInterests();
-		setJobTitle(lister.getJobTitle());
+		interests = parser.getInterests();
+		setJobTitle(parser.getJobTitle());
 		try{
-		setMembershipWeeks(findMembershipWeeks(lister.getMemberFor()));
+		setMembershipWeeks(findMembershipWeeks(parser.getMemberFor()));
 		}catch( NumberFormatException e){
-			System.out.println("lister.getMemberFor(): " + lister.getMemberFor());
+			System.out.println("lister.getMemberFor(): " + parser.getMemberFor());
 			System.out.println("AuthorLink: "+ getAuthorLink());
 		}
 	}

@@ -1,4 +1,4 @@
-package analysis;
+package data;
 import java.util.ArrayList;
 
 import javax.swing.text.MutableAttributeSet;
@@ -7,7 +7,7 @@ import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.HTML.Tag;
 
 
-public class ProfileParseLister extends HTMLEditorKit.ParserCallback{
+public class ProfileParser{
 	
 	private ArrayList<String> interests = new ArrayList<String>();
 	private String jobTitle = "";
@@ -17,6 +17,10 @@ public class ProfileParseLister extends HTMLEditorKit.ParserCallback{
 	private boolean isInterests = false;
 	private boolean isInterest = false;
 	private boolean isUserHistory = false;
+	
+	public void parse(){
+		
+	}
 	
     public void handleText(char[] data, int pos) {
     	String temp = new String(data);
