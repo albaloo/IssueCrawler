@@ -8,7 +8,7 @@ import java.util.TreeMap;
 import org.apache.commons.lang3.StringUtils;
 
 
-import data.AuthorsInfo;
+import data.UserProfileInfo;
 import data.IssueInfo;
 
 import edu.uci.ics.jung.graph.DirectedGraph;
@@ -23,7 +23,7 @@ public class SocialGraph {
 	 public DirectedGraph<Node, Edge> socialGraph = new DirectedSparseGraph<Node, Edge>();
 	 public ArrayList<IssueAnalysis> allIssueAnalysis = new ArrayList<IssueAnalysis>();
 	 
-	 ArrayList<AuthorsInfo> authorsInfos = new ArrayList<AuthorsInfo>();
+	 ArrayList<UserProfileInfo> authorsInfos = new ArrayList<UserProfileInfo>();
 	 
 		private String usabilityInterest = "";
 		private String triangularConnections = "";
@@ -372,14 +372,14 @@ public class SocialGraph {
 		return result;
 	}
 
-	 public int findNumPreviousComments(AuthorsInfo authorInfo) {
+	 public int findNumPreviousComments(UserProfileInfo authorInfo) {
 			int result = 0;
 			Node firstNode = null;
 			int firstIndex = -1;
-			if(authorInfo.getAuthor() != null)
-				firstNode = socialGraphNodes.get(authorInfo.getAuthor().toLowerCase());
+			if(authorInfo.getUserName() != null)
+				firstNode = socialGraphNodes.get(authorInfo.getUserName().toLowerCase());
 			if (firstNode == null)
-			   	  System.out.println("findNumComments: Errrrrrror: " + authorInfo.getAuthor());
+			   	  System.out.println("findNumComments: Errrrrrror: " + authorInfo.getUserName());
 			   else
 			   	  firstIndex = firstNode.getIndex();
 			if(firstIndex != -1)
@@ -408,8 +408,8 @@ public class SocialGraph {
 			int triangularConnectionsNum = 0;
 			int numUniqueAuthors = 0;
 			int numCurCommentsOfCreator = 0;;
-			ArrayList<AuthorsInfo> tempAuthors = new ArrayList<AuthorsInfo>();
-			ArrayList<AuthorsInfo> authorNames = new ArrayList<AuthorsInfo>();
+			ArrayList<UserProfileInfo> tempAuthors = new ArrayList<UserProfileInfo>();
+			ArrayList<UserProfileInfo> authorNames = new ArrayList<UserProfileInfo>();
 			ArrayList<Integer> expertise = new ArrayList<Integer>();
 			
 			//Go thourgh the authors in each issue
@@ -421,17 +421,17 @@ public class SocialGraph {
 					if(issueInfo.getComments().get(i).getAuthor().equals(creator))
 						numCurCommentsOfCreator++;
 					
-					AuthorsInfo currentAuthorsInfo = null;
+					UserProfileInfo currentAuthorsInfo = null;
 					//look for the author
 					for (int j = 0; j < tempAuthors.size(); j++) {
-						if(tempAuthors.get(j).getAuthor().equals(issueInfo.getComments().get(i).getAuthor())){
+						if(tempAuthors.get(j).getUserName().equals(issueInfo.getComments().get(i).getAuthor())){
 							currentAuthorsInfo = tempAuthors.get(j); 
 							break;
 						}
 					}
 					if(currentAuthorsInfo == null || currentAuthorsInfo.equals(null)){
 						numUniqueAuthors ++;
-						currentAuthorsInfo = new AuthorsInfo(issueInfo.getComments().get(i).getAuthor(), issueInfo.getComments().get(i).getAuthorLink());
+						currentAuthorsInfo = new UserProfileInfo(issueInfo.getComments().get(i).getAuthor(), issueInfo.getComments().get(i).getAuthorLink());
 						tempAuthors.add(currentAuthorsInfo);
 					}
 					currentAuthorsInfo.addComments();
@@ -447,10 +447,10 @@ public class SocialGraph {
 			ArrayList<Double> pageRanks = new ArrayList<Double>();
 			
 			//Add the threads
-			for (AuthorsInfo tempAuthor : tempAuthors) {
+			for (UserProfileInfo tempAuthor : tempAuthors) {
 				boolean authorFound = false;
 				for (int k = 0; k < authorsInfos.size(); k++) {
-					if(authorsInfos.get(k).getAuthor().equals(tempAuthor.getAuthor())){
+					if(authorsInfos.get(k).getUserName().equals(tempAuthor.getUserName())){
 						authorsInfos.get(k).setComments(authorsInfos.get(k).getComments() + tempAuthor.getComments());
 						authorsInfos.get(k).addThreads();
 						authorsInfos.get(k).addDates(tempAuthor.getDates());
@@ -461,10 +461,10 @@ public class SocialGraph {
 						authorNames.add(authorsInfos.get(k));
 						counter++;
 						membershipWeeks.add(new Integer(authorsInfos.get(k).getMembershipWeeks()));
-						if(!tempAuthor.getAuthor().equals("System Message"))
+						if(!tempAuthor.getUserName().equals("System Message"))
 							expertise.addAll(findExpertise(authorsInfos.get(k)));
 						previousComments.add(findNumPreviousComments(authorsInfos.get(k)));
-						pageRanks.add(socialGraphNodes.get(authorsInfos.get(k).getAuthor().toLowerCase()).getRank());
+						pageRanks.add(socialGraphNodes.get(authorsInfos.get(k).getUserName().toLowerCase()).getRank());
 						break;
 					}
 				}
@@ -478,9 +478,9 @@ public class SocialGraph {
 					counter++;
 					previousComments.add(findNumPreviousComments(tempAuthor)); 
 					membershipWeeks.add(new Integer(tempAuthor.getMembershipWeeks()));
-					if(!tempAuthor.getAuthor().equals("System Message"))
+					if(!tempAuthor.getUserName().equals("System Message"))
 						expertise.addAll(findExpertise(tempAuthor));
-					pageRanks.add(socialGraphNodes.get(tempAuthor.getAuthor().toLowerCase()).getRank());
+					pageRanks.add(socialGraphNodes.get(tempAuthor.getUserName().toLowerCase()).getRank());
 				}
 			}
 			
@@ -488,9 +488,9 @@ public class SocialGraph {
 			for (int i = 0; i < authorNames.size(); i++) {
 				for (int j = i+1; j < authorNames.size(); j++) {
 					for (int k = j+1; k < authorNames.size(); k++) {
-						int firstIndex = socialGraphNodes.get(authorNames.get(i).getAuthor().toLowerCase()).getIndex();
-						int secondIndex = socialGraphNodes.get(authorNames.get(j).getAuthor().toLowerCase()).getIndex();
-						int thirdIndex = socialGraphNodes.get(authorNames.get(k).getAuthor().toLowerCase()).getIndex();
+						int firstIndex = socialGraphNodes.get(authorNames.get(i).getUserName().toLowerCase()).getIndex();
+						int secondIndex = socialGraphNodes.get(authorNames.get(j).getUserName().toLowerCase()).getIndex();
+						int thirdIndex = socialGraphNodes.get(authorNames.get(k).getUserName().toLowerCase()).getIndex();
 						Date firstDateOfIssue = issueInfo.getComments().get(0).getDate();
 						//&& authorNames.get(i).sharedInterest(authorNames.get(j))
 						if(((!socialMatrix[firstIndex][secondIndex].isEmpty(firstDateOfIssue) || !socialMatrix[secondIndex][firstIndex].isEmpty(firstDateOfIssue))) && ((!socialMatrix[secondIndex][thirdIndex].isEmpty(firstDateOfIssue) || !socialMatrix[thirdIndex][secondIndex].isEmpty(firstDateOfIssue))) && ((!socialMatrix[firstIndex][thirdIndex].isEmpty(firstDateOfIssue) || !socialMatrix[thirdIndex][firstIndex].isEmpty(firstDateOfIssue))))
@@ -525,7 +525,7 @@ public class SocialGraph {
 			return result;
 		}
 
-		private ArrayList<Integer> findExpertise(AuthorsInfo authorInfo){
+		private ArrayList<Integer> findExpertise(UserProfileInfo authorInfo){
 			ArrayList<Integer> result = new ArrayList<Integer>();
 			Date currentDate = new Date(System.currentTimeMillis());
 			

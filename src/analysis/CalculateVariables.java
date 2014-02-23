@@ -24,7 +24,7 @@ import javax.swing.text.html.parser.ParserDelegator;
 
 import org.apache.commons.collections15.Transformer;
 
-import data.AuthorsInfo;
+import data.UserProfileInfo;
 import data.CommentInfo;
 import data.IssueInfo;
 import data.IssueParser;
@@ -40,7 +40,7 @@ public class CalculateVariables {
 	ArrayList<IssueInfo> issueInfos = new ArrayList<IssueInfo>();
 	
 	SocialGraph socialGraph = new SocialGraph();
-	String SUFFIX = "";//-performance";
+	public static String SUFFIX = "";//-performance";
 	
 	File fileConsensus=new File("consensus-allvariables" + SUFFIX +".txt");
     FileOutputStream fopConsensus;
@@ -114,8 +114,8 @@ public class CalculateVariables {
 	}
 
 	private void printAuthorsInfo() throws IOException {
-		for (AuthorsInfo authorsInfo : socialGraph.authorsInfos) {
-			String temp = authorsInfo.getAuthor() + "\t" + authorsInfo.getAuthorLink() + "\t" + authorsInfo.getComments() + "\t" + authorsInfo.getThreads() + "\t" + authorsInfo.getMembershipWeeks() + "\t" + authorsInfo.getJobTitle() + "\t";
+		for (UserProfileInfo authorsInfo : socialGraph.authorsInfos) {
+			String temp = authorsInfo.getUserName() + "\t" + authorsInfo.getProfileLink() + "\t" + authorsInfo.getComments() + "\t" + authorsInfo.getThreads() + "\t" + authorsInfo.getMembershipWeeks() + "\t" + authorsInfo.getJobTitle() + "\t";
 			ArrayList<Date> minMaxDate = findMinMaxDates(authorsInfo.getDates());
 			double duration = Stats.findDuration(minMaxDate.get(0), minMaxDate.get(1));
 			temp+= duration + "\t" + minMaxDate.get(0).getTime()+ "\t" + minMaxDate.get(1).getTime() + "\t"+ minMaxDate.get(0) + "\t" + minMaxDate.get(1)+ "\t" + authorsInfo.getInterests() +"\n";

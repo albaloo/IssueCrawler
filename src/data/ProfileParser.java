@@ -1,98 +1,87 @@
 package data;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
 
-import javax.swing.text.MutableAttributeSet;
-import javax.swing.text.html.HTML;
-import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.HTML.Tag;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 
 public class ProfileParser{
-	
-	private ArrayList<String> interests = new ArrayList<String>();
-	private String jobTitle = "";
-	private String memberFor = "";
-	private boolean isJobTitle = false;
-	private boolean isMemberFor = false;
-	private boolean isInterests = false;
-	private boolean isInterest = false;
-	private boolean isUserHistory = false;
-	
-	public void parse(){
+	public void parseProfile(UserProfileInfo currentParticipant, String filePath, String SUFFIX) throws IOException{
+    	File threadFile = new File(filePath + FindAuthorLinkFromPartialLink(currentParticipant.getProfileLink()) +SUFFIX +".txt");
+		Document doc = Jsoup.parse(threadFile, null);
 		
-	}
-	
-    public void handleText(char[] data, int pos) {
-    	String temp = new String(data);
-    	if(isJobTitle){
-    		jobTitle += temp;
-    		isJobTitle = false;
-    	}else if(isInterests && isInterest){
-    		String interest = new String();
-    		interest += temp;
-    		if(!temp.equals(", "))
-    			interests.add(interest);
-    		isInterest = false;
-    	}else if(isMemberFor && (temp.contains(" year") || temp.contains(" week"))){
-    		memberFor += temp;
-    		isMemberFor = false;
-    		isUserHistory = false;
-    	}
-    	
-    }
-
-    public ArrayList<String> getInterests() {
-		return interests;
-	}
-
-    public String getMemberFor() {
-		return memberFor;
-	}
-
-    public String getJobTitle() {
-		return jobTitle;
-	}
-
-	/** TODO: handle special case: 
-	 * 1- image may be hosted elsewhere <a href= "">
-	 * 
-	 */
-	public void handleStartTag(HTML.Tag t, MutableAttributeSet a, int pos) {       
+		Element infoBlock = doc.select("div[class=main]").first();
 		
-		//<dd class="profile-profile_interest grid-6 omega"><a href="/profile/profile_interest/webchick">webchick</a>, <a href="/profile/profile_interest/information%20architecture">information architecture</a>, <a href="/profile/profile_interest/interaction%20design">interaction design</a>, <a href="/profile/profile_interest/usability">usability</a></dd> 
-		//<dd class="profile-profile_job grid-6 omega">Usability Expert</dd>
-		//<dd class="grid-6 omega">4 years 30 weeks</dd> 
-		String divValue = (String)a.getAttribute(HTML.Attribute.CLASS);
-    	if (t.toString().equals("dd") && divValue != null && divValue.equals("profile-profile_interest grid-6 omega")){
-    		isInterests = true;
-		}else if (t.toString().equals("dd") &&  divValue != null && divValue.equals("profile-profile_job grid-6 omega")){
-    		isJobTitle = true;
-    		return;
-		}else if (t.toString().equals("dd") && divValue != null && divValue.equals("grid-6 omega") && isUserHistory){
-    		isMemberFor = true;
-    		return;
-    	}else if (t.toString().equals("dl") && divValue != null && divValue.equals("user-member clear-block")){
-    		isUserHistory = true;
-    		return;
-    	}
-    	
-		String aValue = (String)a.getAttribute(HTML.Attribute.HREF);
-    	if (t.toString().equals("a") && aValue != null && isInterests){
-    		isInterest = true;
-    	}
-     	                		
+		if(infoBlock != null){
+			Elements infos= infoBlock.select("h3");
+			
+			for (Element info : infos) {
+				if(info.text().equals("Personal information")){
+					Element dl = info.nextElementSibling();
+					Elements dts = dl.select("dt");
+					for (Element dt : dts){
+						if(dt.text().equals("First or given name")){
+							Element dd = dt.nextElementSibling();
+							currentParticipant.setFirstName(dd.text());
+						}else if(dt.text().equals("Last name or surname")){
+							Element dd = dt.nextElementSibling();
+							currentParticipant.setLastName(dd.text());
+						}else if(dt.text().equals("Interests")){
+							Element dd = dt.nextElementSibling();
+							String[] interests= dd.text().split(", ");
+							for (String string : interests) {
+								if(string != "")
+									currentParticipant.addInterest(string);
+							}
+						}		
+					}
+					
+				}else if(info.text().equals("Work")){
+					Element dl = info.nextElementSibling();
+					Elements dts = dl.select("dt");
+					for (Element dt : dts){
+						if(dt.text().equals("Job title")){
+							Element dd = dt.nextElementSibling();
+							currentParticipant.setJobTitle(dd.text());
+						}	
+					}
+					
+				}else if(info.text().equals("History")){
+					Element dl = info.nextElementSibling();
+					Elements dts = dl.select("dt");
+					for (Element dt : dts){
+						if(dt.text().equals("Member for")){
+							Element dd = dt.nextElementSibling();
+							currentParticipant.setMembershipWeeks(dd.text());
+						}	
+					}
+				}
+			}
+		}
+
     }
 	
-    
-	public void handleSimpleTag(Tag t, MutableAttributeSet a, int pos) {
+	public static String FindAuthorLinkFromPartialLink(String link) {
+		String name = (link.replaceFirst("user", "")).substring(2);
+		int index = name.indexOf('#');
+		if (index > 0)
+			name = name.substring(0, index);
+		return name;
 	}
-
-	public void handleEndTag(HTML.Tag t, int pos) {
-    	if (t.toString().equals("dd") && isInterests){
-    		isInterests = false;
-    		isInterest = false;
-    	}
-    }
-
+	
+	public static void main(String[] args) {
+		ProfileParser parser = new ProfileParser();
+		UserProfileInfo currentParticipant = new UserProfileInfo("ParisLiakos", "/user/4166");//"/user/4166");
+		try {
+			parser.parseProfile(currentParticipant, "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\profiles\\profile-", "");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println(currentParticipant);
+	}
+	
 
 }
