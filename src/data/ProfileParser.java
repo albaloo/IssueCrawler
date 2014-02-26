@@ -7,6 +7,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import analysis.CalculateVariables;
+
 
 public class ProfileParser{
 	public void parseProfile(UserProfileInfo currentParticipant, String filePath, String SUFFIX) throws IOException{
@@ -76,7 +78,7 @@ public class ProfileParser{
 		ProfileParser parser = new ProfileParser();
 		UserProfileInfo currentParticipant = new UserProfileInfo("ParisLiakos", "/user/4166");//"/user/4166");
 		try {
-			parser.parseProfile(currentParticipant, "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\profiles\\profile-", "");
+			parser.parseProfile(currentParticipant, CalculateVariables.profileListFileName, "");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

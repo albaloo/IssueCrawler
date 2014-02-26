@@ -30,7 +30,7 @@ public class IssueParser{
 		
 		// Go to the next page if any
 		if (issue.getNumPages() > 1) {
-			threadFile = new File("C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\usabilityThreads\\thread-" + IssueQueueParser.FindIssueNameFromPartialLink(issue.getLink()) +SUFFIX +"-p2.txt");
+			threadFile = new File(filePath + IssueQueueParser.FindIssueNameFromPartialLink(issue.getLink()) +SUFFIX +"-p2.txt");
 			doc = Jsoup.parse(threadFile, null);
 			parseComments(doc);
 		}

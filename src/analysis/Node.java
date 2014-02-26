@@ -159,13 +159,12 @@ public class Node {
 	}
 
 	// TODO: why we are adding one link for the ones that have replies?
-	public void updateRepliersAndThreads(IssueInfo issueInfo,
-			CommentInfo commentInfo, double duration) {
+	public void updateRepliersAndThreads(IssueInfo issueInfo, CommentInfo commentInfo, double duration) {
 		if (commentInfo.getReceiverNames().size() != 0) {
 			for (String receiver : commentInfo.getReceiverNames()) {
 				this.addReplier(receiver, commentInfo);
 			}
-		} else
+		}// else
 			this.addThread(
 					(issueInfo.getLink().replaceFirst("node", "")).substring(2),
 					commentInfo);

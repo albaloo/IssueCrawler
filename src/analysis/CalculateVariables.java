@@ -34,14 +34,17 @@ import edu.uci.ics.jung.algorithms.scoring.PageRank;
 
 public class CalculateVariables {
 
-	private ArrayList<IssueParser> innerListers = new ArrayList<IssueParser>();
 	ArrayList<Double> durations = new ArrayList<Double>();
 	ArrayList<Date> startDates = new ArrayList<Date>();
 	ArrayList<IssueInfo> issueInfos = new ArrayList<IssueInfo>();
 	
 	SocialGraph socialGraph = new SocialGraph();
 	public static String SUFFIX = "";//-performance";
-	
+	public static String issueListFileName = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\usabilityThreads\\all-threads-" + SUFFIX +".txt";
+	public static String allIssuefilesPath = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\usabilityThreads\\thread-";
+	public static String profileListFileName = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\profiles\\all-profiles-" + SUFFIX +".txt";
+	public static String allProfilesPath = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\profiles\\profile-";
+
 	File fileConsensus=new File("consensus-allvariables" + SUFFIX +".txt");
     FileOutputStream fopConsensus;
 
@@ -62,8 +65,19 @@ public class CalculateVariables {
 		demo.calculateVariables();
 	}
 	
-	public void calculateVaribalesForOneIssue(){
+	public void calculateVaribalesForTestIssue(String issueListFileName) throws IOException{
+		initFiles();
+		loadAllIssues(issueListFileName, allIssuefilesPath);
+		//Sort the issue infos based on start time
+		Collections.sort(issueInfos, new IssueInfoTimeComparator());
+		//Go through the issues and print out their information
+
+		//Social Matrix
+		socialGraph.create(issueInfos);
+		socialGraph.fillSocialMatrix();
 		
+		printSocialMatrix();
+		closeFiles();
 	}
 	
 	public void calculateVariables(){
@@ -78,7 +92,7 @@ public class CalculateVariables {
 			cutoffDate = df.parse("Feb 4 2009 - 4:17pm");
 			if(fileConsensus.exists() && fileNonConsensus.exists() && fileAuthors.exists()){
 				//Parse all the issues
-				loadAllIssues(spec);
+				loadAllIssues(issueListFileName, allIssuefilesPath);
 				//Sort the issue infos based on start time
 				Collections.sort(issueInfos, new IssueInfoTimeComparator());
 				//Go through the issues and print out their information
@@ -87,7 +101,7 @@ public class CalculateVariables {
 				socialGraph.create(issueInfos);
 				socialGraph.fillSocialMatrix();
 				
-				//printSocialMatrix();
+				printSocialMatrix();
 				System.out.println("social graph started");
 				socialGraph.fillSocialGraph();
 				pageRank();
@@ -129,10 +143,8 @@ public class CalculateVariables {
 		}
 	}
 
-	private void loadAllIssues(String spec) throws IOException {
+	private void loadAllIssues(String issueListFileName, String allIssuefilesPath) throws IOException {
 		//Lister to parse the search page for the issues
-		String issueListFileName = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\usabilityThreads\\all-threads-" + SUFFIX +".txt";
-		String allIssuefilesPath = "C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\usabilityThreads\\thread-";
 		IssueQueueParser parser = new IssueQueueParser();
 		issueInfos = parser.loadAndParseIssues(issueListFileName, allIssuefilesPath, SUFFIX);
 		

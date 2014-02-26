@@ -115,20 +115,11 @@ public class UserProfileInfo {
 		ProfileParser parser = new ProfileParser();
 		try {
 			parser.parseProfile(
-					this,
-					"C:\\Users\\rzilouc2\\Documents\\Research\\PhD-repository\\Prelim\\Implementation\\IssueSaver\\profiles\\profile-",
-					CalculateVariables.SUFFIX);
+						this,
+						CalculateVariables.profileListFileName,
+						CalculateVariables.SUFFIX);
 		} catch (IOException e) {
-			System.out.println("secure link/access denied");
-		}
-		// interests = parser.getInterests();
-		// setJobTitle(parser.getJobTitle());
-		try {
-			// setMembershipWeeks(findMembershipWeeks(parser.getMemberFor()));
-		} catch (NumberFormatException e) {
-			// System.out.println("lister.getMemberFor(): " +
-			// parser.getMemberFor());
-			System.out.println("AuthorLink: " + getProfileLink());
+			e.printStackTrace();
 		}
 	}
 
